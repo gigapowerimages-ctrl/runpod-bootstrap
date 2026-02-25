@@ -22,9 +22,9 @@ mkdir -p $BASE_PATH/vae
 mkdir -p $WILDCARD_PATH
 mkdir -p /workspace/tmp
 
-# =====================================================
+# ==============================
 # RCLONE SETUP
-# =====================================================
+# ==============================
 
 mkdir -p ~/.config/rclone
 
@@ -40,18 +40,15 @@ rclone about gdrive: || { echo "❌ Drive auth failed"; exit 1; }
 
 echo "Running MODE: $MODE"
 
-# =====================================================
+# ==============================
 # IMAGE MODE
-# =====================================================
+# ==============================
 
 if [ "$MODE" = "image" ]; then
 
   echo "Setting up IMAGE environment..."
 
-  # -------------------------
-  # QWEN BASE MODEL
-  # -------------------------
-
+  # Qwen base model
   cd $BASE_PATH/diffusion_models
   MODEL_VERSION_ID=2086298
   MODEL_NAME="qwen_image_model.safetensors"
@@ -62,30 +59,21 @@ if [ "$MODE" = "image" ]; then
       -o "$MODEL_NAME"
   fi
 
-  # -------------------------
-  # TEXT ENCODER
-  # -------------------------
-
+  # Text encoder
   cd $BASE_PATH/text_encoders
   if [ ! -f "qwen_2.5_vl_7b_fp8_scaled.safetensors" ]; then
     curl -L -o qwen_2.5_vl_7b_fp8_scaled.safetensors \
       "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/qwen_2.5_vl_7b_fp8_scaled.safetensors"
   fi
 
-  # -------------------------
   # VAE
-  # -------------------------
-
   cd $BASE_PATH/vae
   if [ ! -f "Qwen_Image-VAE.safetensors" ]; then
     curl -L -o Qwen_Image-VAE.safetensors \
       "https://huggingface.co/Qwen/Qwen-Image/resolve/main/Qwen_Image-VAE.safetensors"
   fi
 
-  # -------------------------
-  # QWEN LORAS
-  # -------------------------
-
+  # Qwen LoRAs
   cd $BASE_PATH/loras
 
   declare -A LORAS=(
@@ -110,10 +98,7 @@ if [ "$MODE" = "image" ]; then
     fi
   done
 
-  # -------------------------
-  # INSTALL GPROMPTS
-  # -------------------------
-
+  # Install gprompts
   cd /workspace/ComfyUI/custom_nodes
   if [ ! -d "comfyui_gprompts" ]; then
     git clone https://github.com/GadzoinksOfficial/comfyui_gprompts.git
@@ -121,9 +106,9 @@ if [ "$MODE" = "image" ]; then
 
 fi
 
-# =====================================================
+# ==============================
 # VIDEO MODE
-# =====================================================
+# ==============================
 
 if [ "$MODE" = "video" ]; then
 
@@ -166,9 +151,9 @@ if [ "$MODE" = "video" ]; then
 
 fi
 
-# =====================================================
+# ==============================
 # SAFE OUTPUT AUTO UPLOAD
-# =====================================================
+# ==============================
 
 echo "Starting output auto-upload..."
 
