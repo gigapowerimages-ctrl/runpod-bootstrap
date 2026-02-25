@@ -6,7 +6,7 @@ echo "=== RUNPOD BOOTSTRAP START ==="
 # Log everything
 exec > >(tee -a /workspace/bootstrap.log) 2>&1
 
-BASE_PATH="/workspace/ComfyUI/models"
+BASE_PATH="/ComfyUI/models"
 MODE="${MODE:-image}"
 
 echo "Mode: $MODE"
@@ -138,65 +138,15 @@ fi
 echo "Downloading loras.zip from Drive..."
 
 if rclone copy gdrive:runpod/image/loras.zip /workspace/; then
-  unzip -o /workspace/loras.zip -d "$BASE_PATH/loras"
-  rm /workspace/loras.zip
-  echo "LoRAs installed."
+mkdir -p "$BASE_PATH/loras"
+
+unzip -o /workspace/loras.zip -d /workspace/tmp_loras
+
+if [ -d /workspace/tmp_loras/loras ]; then
+  mv /workspace/tmp_loras/loras/* "$BASE_PATH/loras/"
 else
-  echo "WARNING: loras.zip not found"
+  mv /workspace/tmp_loras/* "$BASE_PATH/loras/"
 fi
 
-# -------------------------
-# INSTALL WILDCARDS FROM DRIVE
-# -------------------------
-
-echo "Downloading wildcards.zip from Drive..."
-
-rclone copy gdrive:runpod/image/wildcards.zip /workspace/ || {
-  echo "Failed to download wildcards.zip"
-  exit 1
-}
-
-mkdir -p /workspace/ComfyUI/models/wildcards
-
-# Extract to temp folder first
-unzip -o /workspace/wildcards.zip -d /workspace/tmp_wildcards
-
-# If zip contains nested wildcards folder, flatten it
-if [ -d /workspace/tmp_wildcards/wildcards ]; then
-  mv /workspace/tmp_wildcards/wildcards/* /workspace/ComfyUI/models/wildcards/
-else
-  mv /workspace/tmp_wildcards/* /workspace/ComfyUI/models/wildcards/
-fi
-
-rm -rf /workspace/tmp_wildcards
-rm /workspace/wildcards.zip
-
-echo "Wildcards installed."
-else
-  echo "WARNING: wildcards.zip not found"
-fi
-
-# -------------------------
-# GOOGLE DRIVE OUTPUT SYNC
-# -------------------------
-
-echo "Starting background Google Drive sync..."
-
-mkdir -p /workspace/ComfyUI/output
-rclone mkdir gdrive:runpod/outputs 2>/dev/null || true
-
-nohup bash -c '
-while true; do
-  rclone sync /workspace/ComfyUI/output \
-    gdrive:runpod/outputs \
-    --ignore-existing \
-    --transfers 4 \
-    --checkers 4 \
-    --fast-list
-  sleep 30
-done
-' > /workspace/rclone.log 2>&1 &
-
-echo "Drive sync running in background."
-
-echo "=== RUNPOD BOOTSTRAP COMPLETE ==="
+rm -rf /workspace/tmp_loras
+rm /workspace/loras.zip
