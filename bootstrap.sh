@@ -123,7 +123,6 @@ if [ "$MODE" = "video" ]; then
 
 fi
 
-echo "=== RUNPOD BOOTSTRAP COMPLETE ==="
 
 # -------------------------
 # CONFIGURE RCLONE
@@ -190,7 +189,6 @@ rm /workspace/wildcards.zip
 echo "Wildcards installed."
 
 
-echo "=== RUNPOD BOOTSTRAP COMPLETE ==="
 
 # -------------------------
 # GOOGLE DRIVE OUTPUT SYNC
@@ -217,3 +215,5 @@ done
 
 echo "Drive sync running in background."
 
+
+echo "=== RUNPOD BOOTSTRAP COMPLETE ==="
