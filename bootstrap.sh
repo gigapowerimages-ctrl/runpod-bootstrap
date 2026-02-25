@@ -181,9 +181,9 @@ rclone copy gdrive:runpod/image/wildcards.zip /workspace/ || {
   exit 1
 }
 
-mkdir -p /workspace/ComfyUI/user/default/wildcards
+mkdir -p /workspace/ComfyUI/models/wildcards
 unzip -o /workspace/wildcards.zip \
-  -d /workspace/ComfyUI/user/default/wildcards
+  -d /workspace/ComfyUI/models/wildcards
 rm /workspace/wildcards.zip
 
 echo "Wildcards installed."
