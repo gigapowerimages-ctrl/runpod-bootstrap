@@ -3,7 +3,7 @@ set -euo pipefail
 
 echo "=== RUNPOD BOOTSTRAP START ==="
 
-BASE_PATH="/ComfyUI/models"
+BASE_PATH="/workspace/ComfyUI/models"
 MODE="${MODE:-image}"
 
 echo "Mode: $MODE"
@@ -122,5 +122,72 @@ if [ "$MODE" = "video" ]; then
   done
 
 fi
+
+echo "=== RUNPOD BOOTSTRAP COMPLETE ==="
+
+# -------------------------
+# CONFIGURE RCLONE
+# -------------------------
+
+echo "Configuring rclone..."
+
+if [ -z "${rclone_gdrive_token:-}" ]; then
+  echo "ERROR: rclone_gdrive_token not set"
+  exit 1
+fi
+
+mkdir -p ~/.config/rclone
+
+cat > ~/.config/rclone/rclone.conf <<EOC
+[gdrive]
+type = drive
+scope = drive
+token = ${rclone_gdrive_token}
+EOC
+
+echo "Testing Drive connection..."
+
+rclone about gdrive: > /dev/null 2>&1 || {
+  echo "ERROR: Failed to connect to Google Drive"
+  exit 1
+}
+
+echo "rclone configured successfully."
+
+# -------------------------
+# INSTALL LORAS FROM DRIVE
+# -------------------------
+
+echo "Downloading loras.zip from Drive..."
+
+rclone copy gdrive:runpod/image/loras.zip /workspace/ || {
+  echo "Failed to download loras.zip"
+  exit 1
+}
+
+mkdir -p /workspace/ComfyUI/models/loras
+unzip -o /workspace/loras.zip -d /workspace/ComfyUI/models/loras
+rm /workspace/loras.zip
+
+echo "LoRAs installed."
+
+# -------------------------
+# INSTALL WILDCARDS FROM DRIVE
+# -------------------------
+
+echo "Downloading wildcards.zip from Drive..."
+
+rclone copy gdrive:runpod/image/wildcards.zip /workspace/ || {
+  echo "Failed to download wildcards.zip"
+  exit 1
+}
+
+mkdir -p /workspace/ComfyUI/user/default/wildcards
+unzip -o /workspace/wildcards.zip \
+  -d /workspace/ComfyUI/user/default/wildcards
+rm /workspace/wildcards.zip
+
+echo "Wildcards installed."
+
 
 echo "=== RUNPOD BOOTSTRAP COMPLETE ==="
