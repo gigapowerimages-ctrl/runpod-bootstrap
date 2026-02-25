@@ -191,3 +191,29 @@ echo "Wildcards installed."
 
 
 echo "=== RUNPOD BOOTSTRAP COMPLETE ==="
+
+# -------------------------
+# GOOGLE DRIVE OUTPUT SYNC
+# -------------------------
+
+echo "Starting background Google Drive sync..."
+
+mkdir -p /workspace/ComfyUI/output
+
+# Ensure remote folder exists
+rclone mkdir gdrive:runpod/outputs 2>/dev/null || true
+
+nohup bash -c '
+while true; do
+  rclone sync /workspace/ComfyUI/output \
+    gdrive:runpod/outputs \
+    --ignore-existing \
+    --transfers 4 \
+    --checkers 4 \
+    --fast-list
+  sleep 30
+done
+' > /workspace/rclone.log 2>&1 &
+
+echo "Drive sync running in background."
+
