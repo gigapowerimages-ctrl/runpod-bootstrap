@@ -151,10 +151,27 @@ fi
 
 echo "Downloading wildcards.zip from Drive..."
 
-if rclone copy gdrive:runpod/image/wildcards.zip /workspace/; then
-  unzip -o /workspace/wildcards.zip -d "$BASE_PATH/wildcards"
-  rm /workspace/wildcards.zip
-  echo "Wildcards installed."
+rclone copy gdrive:runpod/image/wildcards.zip /workspace/ || {
+  echo "Failed to download wildcards.zip"
+  exit 1
+}
+
+mkdir -p /workspace/ComfyUI/models/wildcards
+
+# Extract to temp folder first
+unzip -o /workspace/wildcards.zip -d /workspace/tmp_wildcards
+
+# If zip contains nested wildcards folder, flatten it
+if [ -d /workspace/tmp_wildcards/wildcards ]; then
+  mv /workspace/tmp_wildcards/wildcards/* /workspace/ComfyUI/models/wildcards/
+else
+  mv /workspace/tmp_wildcards/* /workspace/ComfyUI/models/wildcards/
+fi
+
+rm -rf /workspace/tmp_wildcards
+rm /workspace/wildcards.zip
+
+echo "Wildcards installed."
 else
   echo "WARNING: wildcards.zip not found"
 fi
