@@ -214,3 +214,19 @@ if [ "${MODE:-image}" = "video" ]; then
 
 fi
 
+
+########################################
+# QWEN BASE MODEL (FP8 E4M3FN)
+########################################
+
+echo "Installing Qwen Base Model (fp8 e4m3fn)..."
+cd "/ComfyUI/models/diffusion_models" || exit 1
+
+if [ ! -f "qwen_image_fp8_e4m3fn.safetensors" ]; then
+  wget -q --show-progress -O qwen_image_fp8_e4m3fn.safetensors \
+  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_fp8_e4m3fn.safetensors
+else
+  echo "Qwen base model already exists"
+fi
+
+########################################
