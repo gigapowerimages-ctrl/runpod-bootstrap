@@ -17,10 +17,6 @@ echo "Mode: $MODE"
 apt update -y
 apt install -y unzip wget curl rclone git
 
-mkdir -p "$BASE_PATH/diffusion_models"
-mkdir -p "$BASE_PATH/loras"
-mkdir -p "$BASE_PATH/text_encoders"
-mkdir -p "$BASE_PATH/vae"
 mkdir -p "$BASE_PATH/wildcards"
 
 # -------------------------
@@ -93,6 +89,36 @@ if [ ! -f "qwen_image_fp8_e4m3fn.safetensors" ]; then
   https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_fp8_e4m3fn.safetensors
 else
   echo "✔ Qwen base model exists"
+fi
+
+# -------------------------
+# QWEN VAE
+# -------------------------
+
+echo "Installing Qwen VAE..."
+
+cd "$BASE_PATH/vae"
+
+if [ ! -f "qwen_vae.safetensors" ]; then
+  wget -q --show-progress -O qwen_vae.safetensors \
+  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_vae.safetensors
+else
+  echo "✔ Qwen VAE exists"
+fi
+
+# -------------------------
+# QWEN TEXT ENCODER
+# -------------------------
+
+echo "Installing Qwen Text Encoder..."
+
+cd "$BASE_PATH/text_encoders"
+
+if [ ! -f "qwen_text_encoder.safetensors" ]; then
+  wget -q --show-progress -O qwen_text_encoder.safetensors \
+  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_text_encoder.safetensors
+else
+  echo "✔ Qwen Text Encoder exists"
 fi
 
 # -------------------------
