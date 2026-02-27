@@ -271,3 +271,26 @@ if [ "${MODE:-image}" = "image" ]; then
   echo "✅ comfyui_gprompts installed"
 fi
 
+
+########################################
+# SYNC WILDCARDS FROM GOOGLE DRIVE
+########################################
+
+echo "Syncing wildcard files from Google Drive..."
+
+WILDCARD_SRC="gdrive:runpod/image/wildcards"
+WILDCARD_DEST="/ComfyUI/models/wildcards"
+
+if [ -d "$WILDCARD_DEST" ]; then
+  rclone sync "$WILDCARD_SRC" "$WILDCARD_DEST" \
+    --include "*.txt" \
+    --progress
+else
+  echo "❌ Wildcard destination folder not found"
+  exit 1
+fi
+
+echo "Wildcard sync complete."
+
+########################################
+
