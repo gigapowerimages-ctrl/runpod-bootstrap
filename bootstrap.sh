@@ -95,9 +95,9 @@ echo "Installing Qwen VAE..."
 
 cd "$BASE_PATH/vae"
 
-if [ ! -f "qwen_vae.safetensors" ]; then
-  wget -q --show-progress -O qwen_vae.safetensors \
-  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_vae.safetensors
+if [ ! -f "qwen_image_vae.safetensors" ]; then
+  wget -q --show-progress -O qwen_image_vae.safetensors \
+  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors
 else
   echo "✔ Qwen VAE exists"
 fi
