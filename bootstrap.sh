@@ -1,4 +1,3 @@
-cat > bootstrap.sh << 'EOF'
 #!/bin/bash
 set -euo pipefail
 
@@ -211,4 +210,3 @@ if [ -d "$BASE_PATH/wildcards" ]; then
 fi
 
 echo "=== BOOTSTRAP COMPLETE ==="
-EOF
