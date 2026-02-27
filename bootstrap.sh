@@ -65,9 +65,8 @@ if [ "$MODE" = "image" ]; then
     fi
 
     if [ -f "$REPO_DIR/requirements.txt" ]; then
-      pip install -r "$REPO_DIR/requirements.txt"
+      pip install -r "$REPO_DIR/requirements.txt" || true
     else
-      pip install "$REPO_DIR"
     fi
 
     echo "✔ comfyui_gprompts ready"
