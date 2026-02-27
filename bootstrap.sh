@@ -4,8 +4,8 @@ set -euo pipefail
 echo "=== RUNPOD BOOTSTRAP START ==="
 
 MODE="${MODE:-image}"
-BASE_PATH="/ComfyUI/models"
-COMFY_ROOT="/ComfyUI"
+BASE_PATH="/workspace/ComfyUI/models"
+COMFY_ROOT="/workspace/ComfyUI"
 
 echo "Mode: $MODE"
 
@@ -17,21 +17,6 @@ apt update -y
 apt install -y unzip wget curl rclone git
 
 # -------------------------
-# PERSISTENT MODEL STORAGE
-# -------------------------
-
-echo "Setting up persistent model storage..."
-
-mkdir -p /workspace/models
-
-if [ -d "/ComfyUI/models" ] && [ ! -L "/ComfyUI/models" ]; then
-  echo "Replacing default model directory with persistent symlink..."
-  rm -rf /ComfyUI/models
-fi
-
-ln -sfn /workspace/models /ComfyUI/models
-
-echo "✔ Models now stored in /workspace/models"
 
 mkdir -p "$BASE_PATH/wildcards"
 
