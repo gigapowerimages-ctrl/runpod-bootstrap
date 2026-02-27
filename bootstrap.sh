@@ -110,9 +110,9 @@ echo "Installing Qwen Text Encoder..."
 
 cd "$BASE_PATH/text_encoders"
 
-if [ ! -f "umt5_xxl_fp8_e4m3fn_scaled.safetensors" ]; then
-  wget -q --show-progress -O umt5_xxl_fp8_e4m3fn_scaled.safetensors \
-  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
+if [ ! -f "qwen_2.5_vl_7b_fp8_scaled.safetensors" ]; then
+  wget -q --show-progress -O qwen_2.5_vl_7b_fp8_scaled.safetensors \
+  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors
 else
   echo "✔ Qwen Text Encoder exists"
 fi
