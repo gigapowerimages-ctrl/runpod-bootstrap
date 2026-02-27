@@ -16,12 +16,6 @@ apt install -y unzip wget curl rclone
 
 mkdir -p "$BASE_PATH/diffusion_models"
 mkdir -p "$BASE_PATH/loras"
-mkdir -p "$BASE_PATH/text_encoders"
-mkdir -p "$BASE_PATH/vae"
-mkdir -p "$BASE_PATH/wildcards"
-
-# -------------------------
-# CONFIGURE RCLONE FIRST
 # -------------------------
 
 echo "Configuring rclone..."
@@ -65,22 +59,10 @@ if [ "$MODE" = "image" ]; then
     fi
   fi
 
-  cd "$BASE_PATH/text_encoders"
-
-  if [ ! -f "qwen_2.5_vl_7b_fp8_scaled.safetensors" ]; then
-    if ! curl -fL --retry 3 --retry-delay 5 \
-      -o qwen_2.5_vl_7b_fp8_scaled.safetensors \
-      "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/qwen_2.5_vl_7b_fp8_scaled.safetensors"; then
       echo "WARNING: text encoder download failed"
     fi
   fi
 
-  cd "$BASE_PATH/vae"
-
-  if [ ! -f "Qwen_Image-VAE.safetensors" ]; then
-    if ! curl -fL --retry 3 --retry-delay 5 \
-      -o Qwen_Image-VAE.safetensors \
-      "https://huggingface.co/Qwen/Qwen-Image/resolve/main/Qwen_Image-VAE.safetensors"; then
       echo "WARNING: VAE download failed"
     fi
   fi
@@ -109,22 +91,10 @@ if [ "$MODE" = "image" ]; then
     fi
   fi
 
-  cd "$BASE_PATH/text_encoders"
-
-  if [ ! -f "qwen_2.5_vl_7b_fp8_scaled.safetensors" ]; then
-    if ! curl -fL --retry 3 --retry-delay 5 \
-      -o qwen_2.5_vl_7b_fp8_scaled.safetensors \
-      "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/qwen_2.5_vl_7b_fp8_scaled.safetensors"; then
       echo "WARNING: text encoder download failed"
     fi
   fi
 
-  cd "$BASE_PATH/vae"
-
-  if [ ! -f "Qwen_Image-VAE.safetensors" ]; then
-    if ! curl -fL --retry 3 --retry-delay 5 \
-      -o Qwen_Image-VAE.safetensors \
-      "https://huggingface.co/Qwen/Qwen-Image/resolve/main/Qwen_Image-VAE.safetensors"; then
       echo "WARNING: VAE download failed"
     fi
   fi
@@ -150,3 +120,27 @@ fi
 
 rm -rf /workspace/tmp_loras
 rm /workspace/loras.zip
+
+# -------------------------
+# QWEN TEXT ENCODER
+# -------------------------
+
+echo "Downloading Qwen Text Encoder..."
+mkdir -p "$BASE_PATH/text_encoders"
+cd "$BASE_PATH/text_encoders"
+
+wget -O qwen_2.5_vl_7b_fp8_scaled.safetensors \
+https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors
+
+
+# -------------------------
+# QWEN VAE
+# -------------------------
+
+echo "Downloading Qwen VAE..."
+mkdir -p "$BASE_PATH/vae"
+cd "$BASE_PATH/vae"
+
+wget -O qwen_image_vae.safetensors \
+https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors
+
