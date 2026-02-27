@@ -182,12 +182,53 @@ if [ "$MODE" = "video" ]; then
 
   cd "$BASE_PATH/loras"
 
-  declare -A LORAS=(
-    [2315187]="wan_jiggle_lo"
-    [2315167]="wan_jiggle_hi"
-    [2073605]="wan_nsfwsks_hi"
-    [2083303]="wan_nsfwsks_lo"
-  )
+    declare -A LORAS=(
+
+      [2315187]="wan_jiggle_lo"
+      [2315167]="wan_jiggle_hi"
+
+      [2073605]="wan_nsfwsks_hi"
+      [2083303]="wan_nsfwsks_lo"
+
+      [2484657]="wan_k3nk_hi"
+      [2538990]="wan_k3nk_lo"
+
+      [2370687]="wan_bbc_bj_hi"
+      [2370744]="wan_bbc_bj_lo"
+
+      [2553271]="wan_dr34ml4y_lo"
+      [2553151]="wan_dr34ml4y_hi"
+
+      [2273468]="wan_slop_hi"
+      [2273467]="wan_slop_lo"
+
+      [2235299]="wan_2xbj_hi"
+      [2235288]="wan_2xbj_lo"
+
+      [2546793]="wan_struts_hi"
+      [2546797]="wan_struts_lo"
+
+      [2195559]="wan_deep_hi"
+      [2195625]="wan_deep_lo"
+
+      [2663475]="wan_press_hi"
+      [2663487]="wan_press_lo"
+
+      [2419370]="wan_ahe_hi"
+      [2419374]="wan_ahe_lo"
+
+      [2510280]="wan_move_hi"
+      [2510218]="wan_move_lo"
+
+      [2648813]="wan_ride_hi"
+      [2648814]="wan_ride_lo"
+
+      [2508498]="wan_twk_hi"
+      [2514311]="wan_twk_lo"
+
+      [2517513]="wan_deepface_hi"
+      [2517548]="wan_deepface_lo"
+    )
 
   for id in "${!LORAS[@]}"; do
     name="${LORAS[$id]}.safetensors"
