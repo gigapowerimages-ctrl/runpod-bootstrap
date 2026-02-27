@@ -137,6 +137,34 @@ if [ "$MODE" = "image" ]; then
       "https://civitai.com/api/download/models/${MODEL_ID}?type=Model&format=SafeTensor" \
       -o "$MODEL_NAME" || echo "⚠ Model download failed"
   fi
+  echo "=== Installing Image Mode CivitAI LoRAs ==="
+
+  cd "$BASE_PATH/loras"
+
+  declare -A IMAGE_LORAS=(
+    [2106185]="qwen_lenovo"
+    [2338807]="qwen_analog"
+    [2108245]="qwen_adorable"
+    [2436841]="qwen_coolshot"
+    [2207719]="qwen_filmstill"
+    [2270374]="qwen_samsung"
+    [2233198]="qwen_SNOFS"
+    [2195978]="qwen_MYSTIC"
+    [2316696]="qwen_4PLAY"
+  )
+
+  for id in "${!IMAGE_LORAS[@]}"; do
+    name="${IMAGE_LORAS[$id]}.safetensors"
+    if [ ! -f "$name" ]; then
+      echo "Downloading $name"
+      curl -fL \
+        -H "Authorization: Bearer ${civitai_token}" \
+        "https://civitai.com/api/download/models/${id}?type=Model&format=SafeTensor" \
+        -o "$name" || echo "Failed: $name"
+    else
+      echo "$name exists"
+    fi
+  done
 fi
 
 # -------------------------
