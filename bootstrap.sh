@@ -128,15 +128,6 @@ if [ "$MODE" = "image" ]; then
     exit 1
   fi
 
-  MODEL_ID=2086298
-  MODEL_NAME="qwen_image_model.safetensors"
-
-  if [ ! -f "$MODEL_NAME" ]; then
-    curl -fL \
-      -H "Authorization: Bearer ${civitai_token}" \
-      "https://civitai.com/api/download/models/${MODEL_ID}?type=Model&format=SafeTensor" \
-      -o "$MODEL_NAME" || echo "⚠ Model download failed"
-  fi
   echo "=== Installing Image Mode CivitAI LoRAs ==="
 
   cd "$BASE_PATH/loras"
