@@ -230,3 +230,44 @@ else
 fi
 
 ########################################
+
+########################################
+# CUSTOM NODE: comfyui_gprompts (IMAGE)
+########################################
+
+if [ "${MODE:-image}" = "image" ]; then
+  echo "=== Installing custom node: comfyui_gprompts ==="
+
+  COMFY_ROOT="/ComfyUI"
+  NODES_DIR="${COMFY_ROOT}/custom_nodes"
+  REPO_DIR="${NODES_DIR}/comfyui_gprompts"
+
+  if [ ! -d "$COMFY_ROOT" ]; then
+    echo "❌ ComfyUI not found at $COMFY_ROOT"
+    exit 1
+  fi
+
+  if [ ! -d "$NODES_DIR" ]; then
+    echo "❌ custom_nodes folder not found at $NODES_DIR"
+    exit 1
+  fi
+
+  if [ -d "$REPO_DIR" ]; then
+    echo "✔ comfyui_gprompts already present, updating..."
+    git -C "$REPO_DIR" pull --ff-only || true
+  else
+    echo "⬇ Cloning comfyui_gprompts..."
+    git clone https://github.com/GadzoinksOfficial/comfyui_gprompts "$REPO_DIR"
+  fi
+
+  echo "Installing python deps (if any)..."
+  if [ -f "$REPO_DIR/requirements.txt" ]; then
+    pip install -r "$REPO_DIR/requirements.txt"
+  else
+    # repo has pyproject.toml, so install package deps via pip
+    pip install "$REPO_DIR"
+  fi
+
+  echo "✅ comfyui_gprompts installed"
+fi
+
