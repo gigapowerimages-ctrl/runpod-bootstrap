@@ -64,10 +64,6 @@ if [ "$MODE" = "image" ]; then
       git clone https://github.com/GadzoinksOfficial/comfyui_gprompts "$REPO_DIR"
     fi
 
-    if [ -f "$REPO_DIR/requirements.txt" ]; then
-      pip install -r "$REPO_DIR/requirements.txt" || true
-    else
-    fi
 
     echo "✔ comfyui_gprompts ready"
 
