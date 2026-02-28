@@ -164,22 +164,26 @@ if [ "$MODE" = "image" ]; then
 
   done
 
-  # -------------------------
-  # DRIVE ZIP
-  # -------------------------
+# -------------------------
+# DRIVE ZIP (Smart Skip)
+# -------------------------
 
-  echo "Downloading loras.zip from Drive..."
-  if rclone copy gdrive:runpod/image/loras.zip /tmp/; then
-	unzip -o /tmp/loras.zip -d /tmp/loras_tmp
+if [ -z "$(ls -A "$BASE_PATH/loras" 2>/dev/null)" ]; then
+    echo "LoRA folder empty — downloading loras.zip..."
 
-	# Bulletproof flatten: move only actual LoRA files
-		find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv {} "$BASE_PATH/loras/" \;
+    if rclone copy gdrive:runpod/image/loras.zip /tmp/; then
+        unzip -o /tmp/loras.zip -d /tmp/loras_tmp
 
-		rm -rf /tmp/loras_tmp
-		rm /tmp/loras.zip
-  else
-    echo "⚠ No loras.zip found"
-  fi
+        find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv {} "$BASE_PATH/loras/" \;
+
+        rm -rf /tmp/loras_tmp
+        rm /tmp/loras.zip
+    else
+        echo "⚠ No loras.zip found"
+    fi
+else
+    echo "LoRA folder not empty — skipping zip download"
+fi
 
 fi  # ← THIS closes IMAGE MODE block
 
@@ -290,14 +294,18 @@ WORKFLOW_DIR="$COMFY_ROOT/user/default/workflows"
 mkdir -p "$WORKFLOW_DIR"
 
 if [ "$MODE" = "image" ]; then
-    rclone copy gdrive:runpod/image/image.json "$WORKFLOW_DIR/" \
-        && echo "✔ image.json synced" \
+    rclone copyto \
+        gdrive:runpod/image/image.json \
+        "$WORKFLOW_DIR/Unsaved Workflow.json" \
+        && echo "✔ Image workflow applied" \
         || echo "⚠ image.json not found"
 fi
 
 if [ "$MODE" = "video" ]; then
-    rclone copy gdrive:runpod/video/video.json "$WORKFLOW_DIR/" \
-        && echo "✔ video.json synced" \
+    rclone copyto \
+        gdrive:runpod/video/video.json \
+        "$WORKFLOW_DIR/Unsaved Workflow.json" \
+        && echo "✔ Video workflow applied" \
         || echo "⚠ video.json not found"
 fi
 
