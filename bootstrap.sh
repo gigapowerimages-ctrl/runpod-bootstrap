@@ -8,22 +8,25 @@ echo "=== RUNPOD BOOTSTRAP START ==="
 # -------------------------
 
 MODE="${MODE:-image}"
-
 echo "Mode: $MODE"
 
-if [ "$MODE" = "image" ]; then
+echo "Detecting ComfyUI location..."
+
+if [ -d "/workspace/runpod-slim/ComfyUI/models" ]; then
     COMFY_ROOT="/workspace/runpod-slim/ComfyUI"
-elif [ "$MODE" = "video" ]; then
+
+elif [ -d "/workspace/ComfyUI/models" ]; then
     COMFY_ROOT="/workspace/ComfyUI"
+
+elif [ -d "/ComfyUI/models" ]; then
+    COMFY_ROOT="/ComfyUI"
+
 else
-    echo "❌ Unknown MODE: $MODE"
+    echo "❌ Could not find ComfyUI models folder"
     exit 1
 fi
 
-if [ ! -d "$COMFY_ROOT/models" ]; then
-    echo "❌ ComfyUI models folder not found at $COMFY_ROOT"
-    exit 1
-fi
+echo "Using ComfyUI at: $COMFY_ROOT"
 
 BASE_PATH="$COMFY_ROOT/models"
 mkdir -p "$BASE_PATH/diffusion_models"
