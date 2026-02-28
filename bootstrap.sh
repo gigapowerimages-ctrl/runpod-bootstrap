@@ -181,21 +181,6 @@ if [ "$MODE" = "image" ]; then
     echo "⚠ No loras.zip found"
   fi
 
-# -------------------------
-# WORKFLOW SYNC
-# -------------------------
-
-echo "Syncing image workflow..."
-
-WORKFLOW_DIR="$COMFY_ROOT/user/workflows"
-mkdir -p "$WORKFLOW_DIR"
-
-if rclone copy gdrive:runpod/image/image.json "$WORKFLOW_DIR/"; then
-    echo "✔ image.json synced"
-else
-    echo "⚠ image.json not found on Drive"
-fi
-
 fi  # ← THIS closes IMAGE MODE block
 
 # -------------------------
@@ -292,24 +277,30 @@ if [ "$MODE" = "video" ]; then
   done
 
   echo "✔ WAN LoRAs ready"
+
+fi
+
 # -------------------------
-# VIDEO WORKFLOW SYNC
+# WORKFLOW SYNC (Both Modes)
 # -------------------------
 
-echo "Syncing video workflow..."
+echo "Syncing workflow for $MODE mode..."
 
-WORKFLOW_DIR="$COMFY_ROOT/user/workflows"
+WORKFLOW_DIR="$COMFY_ROOT/user/default/workflows"
 mkdir -p "$WORKFLOW_DIR"
 
-if rclone copy gdrive:runpod/video/video.json "$WORKFLOW_DIR/"; then
-    echo "✔ video.json synced"
-else
-    echo "⚠ video.json not found on Drive"
+if [ "$MODE" = "image" ]; then
+    rclone copy gdrive:runpod/image/image.json "$WORKFLOW_DIR/" \
+        && echo "✔ image.json synced" \
+        || echo "⚠ image.json not found"
 fi
 
+if [ "$MODE" = "video" ]; then
+    rclone copy gdrive:runpod/video/video.json "$WORKFLOW_DIR/" \
+        && echo "✔ video.json synced" \
+        || echo "⚠ video.json not found"
 fi
 
-echo "=== BOOTSTRAP COMPLETE ==="
 # -------------------------
 # AUTO SYNC OUTPUTS TO DRIVE
 # -------------------------
@@ -332,3 +323,5 @@ if [ -n "${DRIVE_TARGET:-}" ]; then
     ) &
     echo "Drive auto-sync running."
 fi
+
+echo "=== BOOTSTRAP COMPLETE ==="
