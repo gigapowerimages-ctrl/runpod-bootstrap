@@ -4,7 +4,32 @@ set -euo pipefail
 echo "=== RUNPOD BOOTSTRAP START ==="
 
 MODE="${MODE:-image}"
-BASE_PATH="/workspace/ComfyUI/models"
+# -------------------------
+# SET MODE (image or video)
+# -------------------------
+
+MODE="${MODE:-image}"
+
+echo "Mode: $MODE"
+
+if [ "$MODE" = "image" ]; then
+    COMFY_ROOT="/workspace/runpod-slim/ComfyUI"
+elif [ "$MODE" = "video" ]; then
+    COMFY_ROOT="/workspace/ComfyUI"
+else
+    echo "❌ Unknown MODE: $MODE"
+    exit 1
+fi
+
+if [ ! -d "$COMFY_ROOT/models" ]; then
+    echo "❌ ComfyUI models folder not found at $COMFY_ROOT"
+    exit 1
+fi
+
+BASE_PATH="$COMFY_ROOT/models"
+
+echo "Using ComfyUI at: $COMFY_ROOT"
+echo "Models path: $BASE_PATH"
 COMFY_ROOT="/workspace/ComfyUI"
 
 echo "Mode: $MODE"
