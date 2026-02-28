@@ -55,10 +55,18 @@ echo "Configuring rclone..."
 
 if [ -n "${rclone_gdrive_token:-}" ]; then
     TOKEN="$rclone_gdrive_token"
+    echo "Using rclone_gdrive_token"
 elif [ -n "${gdrive_runpod_root:-}" ]; then
     TOKEN="$gdrive_runpod_root"
+    echo "Using gdrive_runpod_root"
 else
     echo "❌ No Google Drive token provided"
+    exit 1
+fi
+
+# Optional safety check
+if [[ "$TOKEN" == "REAL_TOKEN" ]]; then
+    echo "❌ Placeholder token detected"
     exit 1
 fi
 
@@ -135,7 +143,21 @@ if [ "$MODE" = "image" ]; then
   else
     echo "✔ Qwen Text Encoder exists"
   fi
+# -------------------------
+# DRIVE ZIP (Smart Skip)
+# -------------------------
 
+echo "Restoring Drive LoRAs (if available)..."
+
+if rclone copy gdrive:runpod/image/loras.zip /tmp/ >/dev/null 2>&1 && [ -f /tmp/loras.zip ]; then
+    unzip -o /tmp/loras.zip -d /tmp/loras_tmp
+    find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv -f {} "$BASE_PATH/loras/" \;
+    rm -rf /tmp/loras_tmp
+    rm -f /tmp/loras.zip
+    echo "✔ Drive LoRAs restored"
+else
+    echo "⚠ No loras.zip found on Drive"
+fi
   # -------------------------
   # IMAGE LORAS
   # -------------------------
@@ -173,23 +195,6 @@ if [ "$MODE" = "image" ]; then
 
   done
 
-# -------------------------
-# DRIVE ZIP (Smart Skip)
-# -------------------------
-
-if [ -z "$(ls -A "$BASE_PATH/loras" 2>/dev/null)" ]; then
-    echo "LoRA folder empty — downloading loras.zip..."
-
-    rclone copy gdrive:runpod/image/loras.zip /tmp/
-
-    unzip -o /tmp/loras.zip -d /tmp/loras_tmp
-    find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv {} "$BASE_PATH/loras/" \;
-
-    rm -rf /tmp/loras_tmp
-    rm /tmp/loras.zip
-else
-    echo "LoRA folder not empty — skipping zip download"
-fi
 fi   # closes IMAGE mode
 
 # -------------------------
