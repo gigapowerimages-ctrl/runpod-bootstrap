@@ -273,3 +273,25 @@ if [ -d "$BASE_PATH/wildcards" ]; then
 fi
 
 echo "=== BOOTSTRAP COMPLETE ==="
+# -------------------------
+# AUTO SYNC OUTPUTS TO DRIVE
+# -------------------------
+
+if [ "$MODE" = "image" ]; then
+
+  echo "Starting background Drive sync..."
+
+  OUTPUT_DIR="/workspace/ComfyUI/output"
+  DRIVE_TARGET="gdrive:runpod/image/output"
+
+  mkdir -p "$OUTPUT_DIR"
+
+  (
+  while true; do
+    rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" --ignore-existing --transfers 4 --checkers 8
+    sleep 30
+  done
+  ) &
+
+  echo "Drive auto-sync running."
+fi
