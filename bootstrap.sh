@@ -189,6 +189,12 @@ if [ "$MODE" = "video" ]; then
 
       [2553271]="wan_dr34ml4y_lo"
       [2553151]="wan_dr34ml4y_hi"
+      
+      [2209354]="wan_bounce_hi"
+      [2209344]="wan_bounce_lo"
+      
+      [2246669]="wan_ripple_hi"
+      [2246694]="wan_ripple_lo"
 
       [2273468]="wan_slop_hi"
       [2273467]="wan_slop_lo"
