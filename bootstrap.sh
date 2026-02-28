@@ -42,8 +42,10 @@ echo "Models path: $BASE_PATH"
 # BASIC PACKAGES
 # -------------------------
 
-apt-get update -qq
-apt-get install -y -qq unzip wget curl rclone git
+if ! command -v rclone >/dev/null 2>&1; then
+    apt-get update -qq
+    apt-get install -y -qq unzip wget curl rclone git
+fi
 
 # -------------------------
 # RCLONE CONFIG
@@ -51,19 +53,23 @@ apt-get install -y -qq unzip wget curl rclone git
 
 echo "Configuring rclone..."
 
-if [ -z "${rclone_gdrive_token:-}" ]; then
-  echo "❌ rclone_gdrive_token not set"
-  exit 1
+if [ -n "${rclone_gdrive_token:-}" ]; then
+    TOKEN="$rclone_gdrive_token"
+elif [ -n "${gdrive_runpod_root:-}" ]; then
+    TOKEN="$gdrive_runpod_root"
+else
+    echo "❌ No Google Drive token provided"
+    exit 1
 fi
 
 mkdir -p ~/.config/rclone
 
 printf "[gdrive]\ntype = drive\nscope = drive\ntoken = %s\n" \
-"$rclone_gdrive_token" > ~/.config/rclone/rclone.conf
+"$TOKEN" > ~/.config/rclone/rclone.conf
 
 if ! rclone about gdrive: > /dev/null 2>&1; then
-  echo "❌ Failed to connect to Google Drive"
-  exit 1
+    echo "❌ Failed to connect to Google Drive"
+    exit 1
 fi
 
 echo "✔ rclone configured"
@@ -174,34 +180,27 @@ if [ "$MODE" = "image" ]; then
 if [ -z "$(ls -A "$BASE_PATH/loras" 2>/dev/null)" ]; then
     echo "LoRA folder empty — downloading loras.zip..."
 
-    if rclone copy gdrive:runpod/image/loras.zip /tmp/; then
-        unzip -o /tmp/loras.zip -d /tmp/loras_tmp
+    rclone copy gdrive:runpod/image/loras.zip /tmp/
 
-        find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv {} "$BASE_PATH/loras/" \;
+    unzip -o /tmp/loras.zip -d /tmp/loras_tmp
+    find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv {} "$BASE_PATH/loras/" \;
 
-        rm -rf /tmp/loras_tmp
-        rm /tmp/loras.zip
-    else
-        echo "⚠ No loras.zip found"
-    fi
+    rm -rf /tmp/loras_tmp
+    rm /tmp/loras.zip
 else
     echo "LoRA folder not empty — skipping zip download"
 fi
-
-fi  # ← THIS closes IMAGE MODE block
+fi   # closes IMAGE mode
 
 # -------------------------
 # WILDCARDS SYNC
 # -------------------------
 
 echo "Syncing wildcards..."
-
-if [ -d "$BASE_PATH/wildcards" ]; then
-  rclone sync gdrive:runpod/image/wildcards \
+rclone sync gdrive:runpod/image/wildcards \
   "$BASE_PATH/wildcards" \
   --include "*.txt" \
-  --progress || true
-fi
+  --progress
 
 # -------------------------
 # VIDEO MODE WAN LORAS
@@ -297,19 +296,11 @@ WORKFLOW_DIR="$COMFY_ROOT/user/default/workflows"
 mkdir -p "$WORKFLOW_DIR"
 
 if [ "$MODE" = "image" ]; then
-    rclone copy \
-        gdrive:runpod/image/image.json \
-        "$WORKFLOW_DIR/" \
-        && echo "✔ image.json downloaded" \
-        || echo "⚠ image.json not found"
+    rclone copy gdrive:runpod/image/image.json "$WORKFLOW_DIR/"
 fi
 
 if [ "$MODE" = "video" ]; then
-    rclone copy \
-        gdrive:runpod/video/video.json \
-        "$WORKFLOW_DIR/" \
-        && echo "✔ video.json downloaded" \
-        || echo "⚠ video.json not found"
+    rclone copy gdrive:runpod/video/video.json "$WORKFLOW_DIR/"
 fi
 
 # -------------------------
