@@ -285,7 +285,7 @@ if [ "$MODE" = "video" ]; then
 fi
 
 # -------------------------
-# WORKFLOW SYNC (Both Modes)
+# WORKFLOW SYNC (Named Only)
 # -------------------------
 
 echo "Syncing workflow for $MODE mode..."
@@ -294,18 +294,18 @@ WORKFLOW_DIR="$COMFY_ROOT/user/default/workflows"
 mkdir -p "$WORKFLOW_DIR"
 
 if [ "$MODE" = "image" ]; then
-    rclone copyto \
+    rclone copy \
         gdrive:runpod/image/image.json \
-        "$WORKFLOW_DIR/Unsaved Workflow.json" \
-        && echo "✔ Image workflow applied" \
+        "$WORKFLOW_DIR/" \
+        && echo "✔ image.json downloaded" \
         || echo "⚠ image.json not found"
 fi
 
 if [ "$MODE" = "video" ]; then
-    rclone copyto \
+    rclone copy \
         gdrive:runpod/video/video.json \
-        "$WORKFLOW_DIR/Unsaved Workflow.json" \
-        && echo "✔ Video workflow applied" \
+        "$WORKFLOW_DIR/" \
+        && echo "✔ video.json downloaded" \
         || echo "⚠ video.json not found"
 fi
 
