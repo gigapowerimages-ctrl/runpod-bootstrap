@@ -42,10 +42,8 @@ echo "Models path: $BASE_PATH"
 # BASIC PACKAGES
 # -------------------------
 
-if ! command -v rclone >/dev/null 2>&1; then
-    apt-get update -qq
-    apt-get install -y -qq unzip wget curl rclone git
-fi
+apt-get update -qq
+apt-get install -y -qq unzip wget curl rclone git
 
 # -------------------------
 # RCLONE CONFIG
