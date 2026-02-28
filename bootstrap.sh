@@ -3,7 +3,6 @@ set -euo pipefail
 
 echo "=== RUNPOD BOOTSTRAP START ==="
 
-MODE="${MODE:-image}"
 # -------------------------
 # SET MODE (image or video)
 # -------------------------
@@ -27,23 +26,21 @@ if [ ! -d "$COMFY_ROOT/models" ]; then
 fi
 
 BASE_PATH="$COMFY_ROOT/models"
+mkdir -p "$BASE_PATH/diffusion_models"
+mkdir -p "$BASE_PATH/vae"
+mkdir -p "$BASE_PATH/text_encoders"
+mkdir -p "$BASE_PATH/loras"
+mkdir -p "$BASE_PATH/wildcards"
 
 echo "Using ComfyUI at: $COMFY_ROOT"
 echo "Models path: $BASE_PATH"
-COMFY_ROOT="/workspace/ComfyUI"
-
-echo "Mode: $MODE"
 
 # -------------------------
 # BASIC PACKAGES
 # -------------------------
 
-apt update -y
-apt install -y unzip wget curl rclone git
-
-# -------------------------
-
-mkdir -p "$BASE_PATH/wildcards"
+apt-get update -qq
+apt-get install -y -qq unzip wget curl rclone git
 
 # -------------------------
 # RCLONE CONFIG
@@ -69,84 +66,70 @@ fi
 echo "✔ rclone configured"
 
 # -------------------------
-# INSTALL CUSTOM NODE (IMAGE MODE)
+# IMAGE MODE
 # -------------------------
 
 if [ "$MODE" = "image" ]; then
 
+  # Install custom node
   echo "=== Installing comfyui_gprompts ==="
-
-  NODES_DIR="${COMFY_ROOT}/custom_nodes"
-  REPO_DIR="${NODES_DIR}/comfyui_gprompts"
-
-  if [ -d "$COMFY_ROOT" ] && [ -d "$NODES_DIR" ]; then
-
-    if [ -d "$REPO_DIR" ]; then
-      echo "✔ Updating comfyui_gprompts"
-      git -C "$REPO_DIR" pull --ff-only || true
-    else
-      echo "⬇ Cloning comfyui_gprompts"
-      git clone https://github.com/GadzoinksOfficial/comfyui_gprompts "$REPO_DIR"
-    fi
-
-
-    echo "✔ comfyui_gprompts ready"
-
+  if [ -d "$COMFY_ROOT/custom_nodes" ]; then
+      cd "$COMFY_ROOT/custom_nodes"
+      if [ ! -d "comfyui_gprompts" ]; then
+          git clone https://github.com/GadzoinksOfficial/comfyui_gprompts.git
+          echo "✔ comfyui_gprompts installed"
+      else
+          echo "✔ comfyui_gprompts already exists"
+      fi
   else
-    echo "⚠ ComfyUI not found yet — skipping custom node install"
+      echo "⚠ custom_nodes folder not found"
   fi
-fi
 
-# -------------------------
-# QWEN BASE MODEL
-# -------------------------
+  # -------------------------
+  # QWEN BASE MODEL
+  # -------------------------
 
-echo "Installing Qwen Base Model..."
+  echo "Installing Qwen Base Model..."
+  cd "$BASE_PATH/diffusion_models"
+  if [ ! -f "qwen_image_fp8_e4m3fn.safetensors" ]; then
+    wget -q --show-progress -O qwen_image_fp8_e4m3fn.safetensors \
+    https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_fp8_e4m3fn.safetensors \
+    || echo "⚠ Qwen model download failed"
+  else
+    echo "✔ Qwen base model exists"
+  fi
 
-cd "$BASE_PATH/diffusion_models"
+  # -------------------------
+  # QWEN VAE
+  # -------------------------
 
-if [ ! -f "qwen_image_fp8_e4m3fn.safetensors" ]; then
-  wget -q --show-progress -O qwen_image_fp8_e4m3fn.safetensors \
-  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_fp8_e4m3fn.safetensors
-else
-  echo "✔ Qwen base model exists"
-fi
+  echo "Installing Qwen VAE..."
+  cd "$BASE_PATH/vae"
+  if [ ! -f "qwen_image_vae.safetensors" ]; then
+    wget -q --show-progress -O qwen_image_vae.safetensors \
+    https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors \
+    || echo "⚠ VAE download failed"
+  else
+    echo "✔ Qwen VAE exists"
+  fi
 
-# -------------------------
-# QWEN VAE
-# -------------------------
+  # -------------------------
+  # QWEN TEXT ENCODER
+  # -------------------------
 
-echo "Installing Qwen VAE..."
+  echo "Installing Qwen Text Encoder..."
+  cd "$BASE_PATH/text_encoders"
+  if [ ! -f "qwen_2.5_vl_7b_fp8_scaled.safetensors" ]; then
+    wget -q --show-progress -O qwen_2.5_vl_7b_fp8_scaled.safetensors \
+    https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors \
+    || echo "⚠ Text encoder download failed"
+  else
+    echo "✔ Qwen Text Encoder exists"
+  fi
 
-cd "$BASE_PATH/vae"
-
-if [ ! -f "qwen_image_vae.safetensors" ]; then
-  wget -q --show-progress -O qwen_image_vae.safetensors \
-  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors
-else
-  echo "✔ Qwen VAE exists"
-fi
-
-# -------------------------
-# QWEN TEXT ENCODER
-# -------------------------
-
-echo "Installing Qwen Text Encoder..."
-
-cd "$BASE_PATH/text_encoders"
-
-if [ ! -f "qwen_2.5_vl_7b_fp8_scaled.safetensors" ]; then
-  wget -q --show-progress -O qwen_2.5_vl_7b_fp8_scaled.safetensors \
-  https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors
-else
-  echo "✔ Qwen Text Encoder exists"
-fi
-
-# -------------------------
-# IMAGE MODE DOWNLOADS
-# -------------------------
-
-if [ "$MODE" = "image" ]; then
+  # -------------------------
+  # IMAGE LORAS
+  # -------------------------
 
   if [ -z "${civitai_token:-}" ]; then
     echo "❌ civitai_token not set"
@@ -154,7 +137,6 @@ if [ "$MODE" = "image" ]; then
   fi
 
   echo "=== Installing Image Mode CivitAI LoRAs ==="
-
   cd "$BASE_PATH/loras"
 
   declare -A IMAGE_LORAS=(
@@ -172,15 +154,42 @@ if [ "$MODE" = "image" ]; then
   for id in "${!IMAGE_LORAS[@]}"; do
     name="${IMAGE_LORAS[$id]}.safetensors"
     if [ ! -f "$name" ]; then
-      echo "Downloading $name"
       curl -fL \
         -H "Authorization: Bearer ${civitai_token}" \
         "https://civitai.com/api/download/models/${id}?type=Model&format=SafeTensor" \
-        -o "$name" || echo "Failed: $name"
+        -o "$name" || echo "⚠ Failed: $name"
     else
       echo "$name exists"
     fi
   done
+
+  # -------------------------
+  # DRIVE ZIP
+  # -------------------------
+
+  echo "Downloading loras.zip from Drive..."
+  if rclone copy gdrive:runpod/image/loras.zip /tmp/; then
+    unzip -o /tmp/loras.zip -d /tmp/loras_tmp
+    mv /tmp/loras_tmp/* "$BASE_PATH/loras/" || true
+    rm -rf /tmp/loras_tmp
+    rm /tmp/loras.zip
+  else
+    echo "⚠ No loras.zip found"
+  fi
+
+fi   # ← THIS CLOSES IMAGE MODE CLEANLY
+
+# -------------------------
+# WILDCARDS SYNC
+# -------------------------
+
+echo "Syncing wildcards..."
+
+if [ -d "$BASE_PATH/wildcards" ]; then
+  rclone sync gdrive:runpod/image/wildcards \
+  "$BASE_PATH/wildcards" \
+  --include "*.txt" \
+  --progress || true
 fi
 
 # -------------------------
@@ -266,80 +275,26 @@ if [ "$MODE" = "video" ]; then
   echo "✔ WAN LoRAs ready"
 fi
 
-# -------------------------
-# DRIVE LORA ZIP (IMAGE)
-# -------------------------
-
-if [ "$MODE" = "image" ]; then
-
-  echo "Downloading loras.zip from Drive..."
-
-  if rclone copy gdrive:runpod/image/loras.zip /tmp/; then
-    unzip -o /tmp/loras.zip -d /tmp/loras_tmp
-    mv /tmp/loras_tmp/* "$BASE_PATH/loras/" || true
-    rm -rf /tmp/loras_tmp
-    rm /tmp/loras.zip
-  else
-    echo "⚠ No loras.zip found on Drive"
-  fi
-fi
-
-# -------------------------
-# WILDCARDS SYNC
-# -------------------------
-
-echo "Syncing wildcards..."
-
-if [ -d "$BASE_PATH/wildcards" ]; then
-  rclone sync gdrive:runpod/image/wildcards \
-  "$BASE_PATH/wildcards" \
-  --include "*.txt" \
-  --progress || true
-fi
-
 echo "=== BOOTSTRAP COMPLETE ==="
 # -------------------------
 # AUTO SYNC OUTPUTS TO DRIVE
 # -------------------------
 
-if [ "$MODE" = "image" ]; then
-
-  echo "Starting background Drive sync..."
-
-  OUTPUT_DIR="/workspace/ComfyUI/output"
-  DRIVE_TARGET="gdrive:runpod/image/output"
-
-  mkdir -p "$OUTPUT_DIR"
-
-  (
-  while true; do
-    rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" --ignore-existing --transfers 4 --checkers 8
-    sleep 30
-  done
-  ) &
-
-  echo "Drive auto-sync running."
-fi
-# -------------------------
-# AUTO SYNC OUTPUTS TO DRIVE
-# -------------------------
+OUTPUT_DIR="$COMFY_ROOT/output"
 
 if [ "$MODE" = "image" ]; then
-
-  echo "Starting background Drive sync..."
-
-  OUTPUT_DIR="/workspace/ComfyUI/output"
-  DRIVE_TARGET="gdrive:runpod/image/output"
-
-  mkdir -p "$OUTPUT_DIR"
-
-  (
-  while true; do
-    rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" --ignore-existing --transfers 4 --checkers 8 || true
-    sleep 30
-  done
-  ) &
-
-  echo "Drive auto-sync running."
+    DRIVE_TARGET="gdrive:runpod/image/output"
+elif [ "$MODE" = "video" ]; then
+    DRIVE_TARGET="gdrive:runpod/video/output"
 fi
 
+if [ -n "${DRIVE_TARGET:-}" ]; then
+    mkdir -p "$OUTPUT_DIR"
+    (
+    while true; do
+        rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" --ignore-existing --transfers 4 --checkers 8
+        sleep 30
+    done
+    ) &
+    echo "Drive auto-sync running."
+fi
