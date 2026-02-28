@@ -161,6 +161,7 @@ if [ "$MODE" = "image" ]; then
     else
       echo "$name exists"
     fi
+
   done
 
   # -------------------------
@@ -169,18 +170,33 @@ if [ "$MODE" = "image" ]; then
 
   echo "Downloading loras.zip from Drive..."
   if rclone copy gdrive:runpod/image/loras.zip /tmp/; then
-unzip -o /tmp/loras.zip -d /tmp/loras_tmp
+	unzip -o /tmp/loras.zip -d /tmp/loras_tmp
 
-# Bulletproof flatten: move only actual LoRA files
-find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv {} "$BASE_PATH/loras/" \;
+	# Bulletproof flatten: move only actual LoRA files
+		find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv {} "$BASE_PATH/loras/" \;
 
-rm -rf /tmp/loras_tmp
-rm /tmp/loras.zip
+		rm -rf /tmp/loras_tmp
+		rm /tmp/loras.zip
   else
     echo "⚠ No loras.zip found"
   fi
 
-fi   # ← THIS CLOSES IMAGE MODE CLEANLY
+# -------------------------
+# WORKFLOW SYNC
+# -------------------------
+
+echo "Syncing image workflow..."
+
+WORKFLOW_DIR="$COMFY_ROOT/user/workflows"
+mkdir -p "$WORKFLOW_DIR"
+
+if rclone copy gdrive:runpod/image/image.json "$WORKFLOW_DIR/"; then
+    echo "✔ image.json synced"
+else
+    echo "⚠ image.json not found on Drive"
+fi
+
+fi  # ← THIS closes IMAGE MODE block
 
 # -------------------------
 # WILDCARDS SYNC
@@ -276,6 +292,21 @@ if [ "$MODE" = "video" ]; then
   done
 
   echo "✔ WAN LoRAs ready"
+# -------------------------
+# VIDEO WORKFLOW SYNC
+# -------------------------
+
+echo "Syncing video workflow..."
+
+WORKFLOW_DIR="$COMFY_ROOT/user/workflows"
+mkdir -p "$WORKFLOW_DIR"
+
+if rclone copy gdrive:runpod/video/video.json "$WORKFLOW_DIR/"; then
+    echo "✔ video.json synced"
+else
+    echo "⚠ video.json not found on Drive"
+fi
+
 fi
 
 echo "=== BOOTSTRAP COMPLETE ==="
