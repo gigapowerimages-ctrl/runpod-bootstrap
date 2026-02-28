@@ -169,10 +169,13 @@ if [ "$MODE" = "image" ]; then
 
   echo "Downloading loras.zip from Drive..."
   if rclone copy gdrive:runpod/image/loras.zip /tmp/; then
-    unzip -o /tmp/loras.zip -d /tmp/loras_tmp
-    mv /tmp/loras_tmp/* "$BASE_PATH/loras/" || true
-    rm -rf /tmp/loras_tmp
-    rm /tmp/loras.zip
+unzip -o /tmp/loras.zip -d /tmp/loras_tmp
+
+# Bulletproof flatten: move only actual LoRA files
+find /tmp/loras_tmp -type f -name "*.safetensors" -exec mv {} "$BASE_PATH/loras/" \;
+
+rm -rf /tmp/loras_tmp
+rm /tmp/loras.zip
   else
     echo "⚠ No loras.zip found"
   fi
