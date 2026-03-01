@@ -111,19 +111,23 @@ else
 fi
 
 # Optional safety check
-if [[ "$TOKEN" == "REAL_TOKEN" ]]; then
-    echo "❌ Placeholder token detected"
+if [[ "$TOKEN" == "REAL_TOKEN" || -z "$TOKEN" ]]; then
+    echo "❌ Invalid Google Drive token"
     exit 1
 fi
 
 mkdir -p ~/.config/rclone
+rm -f ~/.config/rclone/rclone.conf
 
 cat > ~/.config/rclone/rclone.conf <<EOF
 [gdrive]
 type = drive
 scope = drive
-token = $TOKEN
+token = '$TOKEN'
 EOF
+
+echo "Generated rclone config:"
+cat ~/.config/rclone/rclone.conf
 
 if ! rclone about gdrive: > /dev/null 2>&1; then
     echo "❌ Failed to connect to Google Drive"
