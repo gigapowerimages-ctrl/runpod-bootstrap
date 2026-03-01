@@ -64,12 +64,17 @@ echo
 apt-get update -qq
 apt-get install -y -qq unzip wget curl rclone git
 
+# -------------------------
+# INSTALL CUSTOM NODE REQUIREMENTS
+# -------------------------
+
 echo "=== Installing custom node requirements ==="
 
 for dir in "$CUSTOM_NODE_PATH"/*; do
     if [ -f "$dir/requirements.txt" ]; then
         echo "Installing requirements for $(basename "$dir")"
-	pip install --upgrade --no-cache-dir -r "$dir/requirements.txt" || true    fi
+        pip install --upgrade --no-cache-dir -r "$dir/requirements.txt" || true
+    fi
 done
 
 echo "✔ Custom node requirements installed"
