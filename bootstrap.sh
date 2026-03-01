@@ -118,8 +118,12 @@ fi
 
 mkdir -p ~/.config/rclone
 
-printf "[gdrive]\ntype = drive\nscope = drive\ntoken = %s\n" \
-"$TOKEN" > ~/.config/rclone/rclone.conf
+cat > ~/.config/rclone/rclone.conf <<EOF
+[gdrive]
+type = drive
+scope = drive
+token = $TOKEN
+EOF
 
 if ! rclone about gdrive: > /dev/null 2>&1; then
     echo "❌ Failed to connect to Google Drive"
