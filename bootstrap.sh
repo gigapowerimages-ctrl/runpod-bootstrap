@@ -110,7 +110,6 @@ else
     exit 1
 fi
 
-# Optional safety check
 if [[ "$TOKEN" == "REAL_TOKEN" || -z "$TOKEN" ]]; then
     echo "❌ Invalid Google Drive token"
     exit 1
@@ -123,7 +122,7 @@ cat > ~/.config/rclone/rclone.conf <<EOF
 [gdrive]
 type = drive
 scope = drive
-token = '$TOKEN'
+token = $TOKEN
 EOF
 
 echo "Generated rclone config:"
