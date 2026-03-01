@@ -27,7 +27,53 @@ else
 fi
 
 echo "Using ComfyUI at: $COMFY_ROOT"
+echo
+echo "=== Installing core custom nodes ==="
 
+CUSTOM_NODE_PATH="$COMFY_ROOT/custom_nodes"
+mkdir -p "$CUSTOM_NODE_PATH"
+cd "$CUSTOM_NODE_PATH"
+
+install_node () {
+    REPO_URL="$1"
+    NAME=$(basename "$REPO_URL" .git)
+
+    if [ -d "$NAME" ]; then
+        echo "✔ $NAME already exists, pulling latest"
+        cd "$NAME"
+	git pull --ff-only || true
+        cd ..
+    else
+        echo "Cloning $NAME"
+        git clone --depth 1 "$REPO_URL"
+    fi
+}
+
+install_node https://github.com/rgthree/rgthree-comfy.git
+install_node https://github.com/cubiq/ComfyUI_essentials.git
+install_node https://github.com/GadzoinksOfficial/comfyui_gprompts.git
+
+echo "✔ Custom nodes installed"
+echo
+echo
+
+# -------------------------
+# BASIC PACKAGES
+# -------------------------
+
+apt-get update -qq
+apt-get install -y -qq unzip wget curl rclone git
+
+echo "=== Installing custom node requirements ==="
+
+for dir in "$CUSTOM_NODE_PATH"/*; do
+    if [ -f "$dir/requirements.txt" ]; then
+        echo "Installing requirements for $(basename "$dir")"
+	pip install --upgrade --no-cache-dir -r "$dir/requirements.txt" || true    fi
+done
+
+echo "✔ Custom node requirements installed"
+echo
 BASE_PATH="$COMFY_ROOT/models"
 mkdir -p "$BASE_PATH/diffusion_models"
 mkdir -p "$BASE_PATH/vae"
@@ -37,13 +83,6 @@ mkdir -p "$BASE_PATH/wildcards"
 
 echo "Using ComfyUI at: $COMFY_ROOT"
 echo "Models path: $BASE_PATH"
-
-# -------------------------
-# BASIC PACKAGES
-# -------------------------
-
-apt-get update -qq
-apt-get install -y -qq unzip wget curl rclone git
 
 # -------------------------
 # RCLONE CONFIG
@@ -79,26 +118,6 @@ if ! rclone about gdrive: > /dev/null 2>&1; then
 fi
 
 echo "✔ rclone configured"
-
-# -------------------------
-# IMAGE MODE
-# -------------------------
-
-if [ "$MODE" = "image" ]; then
-
-  # Install custom node
-  echo "=== Installing comfyui_gprompts ==="
-  if [ -d "$COMFY_ROOT/custom_nodes" ]; then
-      cd "$COMFY_ROOT/custom_nodes"
-      if [ ! -d "comfyui_gprompts" ]; then
-          git clone https://github.com/GadzoinksOfficial/comfyui_gprompts.git
-          echo "✔ comfyui_gprompts installed"
-      else
-          echo "✔ comfyui_gprompts already exists"
-      fi
-  else
-      echo "⚠ custom_nodes folder not found"
-  fi
 
   # -------------------------
   # QWEN BASE MODEL
@@ -192,8 +211,6 @@ fi
     fi
 
   done
-
-fi   # closes IMAGE mode
 
 # -------------------------
 # WILDCARDS SYNC
