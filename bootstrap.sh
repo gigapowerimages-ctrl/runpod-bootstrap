@@ -3,24 +3,131 @@ set -euo pipefail
 
 echo "=== RUNPOD BOOTSTRAP START ==="
 
-# -------------------------
-# SET MODE (image or video)
-# -------------------------
-
 MODE="${MODE:-image}"
 echo "Mode: $MODE"
 
+if [[ "$MODE" != "image" && "$MODE" != "video" && "$MODE" != "lora" ]]; then
+  echo "❌ Invalid MODE: $MODE"
+  exit 1
+fi
+# -------------------------
+# BASIC PACKAGES
+# -------------------------
+apt-get update -qq
+apt-get install -y -qq unzip wget curl rclone git
+
+# -------------------------
+# RCLONE CONFIG
+# -------------------------
+echo "Configuring rclone..."
+
+if [ -n "${rclone_gdrive_token:-}" ]; then
+  TOKEN="$rclone_gdrive_token"
+  echo "Using rclone_gdrive_token"
+elif [ -n "${gdrive_runpod_root:-}" ]; then
+  TOKEN="$gdrive_runpod_root"
+  echo "Using gdrive_runpod_root"
+else
+  echo "❌ No Google Drive token provided"
+  exit 1
+fi
+
+if [[ "$TOKEN" == "REAL_TOKEN" || -z "$TOKEN" ]]; then
+  echo "❌ Invalid Google Drive token"
+  exit 1
+fi
+
+mkdir -p ~/.config/rclone
+rm -f ~/.config/rclone/rclone.conf
+
+cat > ~/.config/rclone/rclone.conf <<EOF
+[gdrive]
+type = drive
+scope = drive
+token = $TOKEN
+EOF
+
+if ! rclone about gdrive: > /dev/null 2>&1; then
+  echo "❌ Failed to connect to Google Drive"
+  exit 1
+fi
+
+echo "✔ rclone configured"
+
+# -------------------------
+# LORA DATASET MODE (EXIT EARLY)
+# -------------------------
+if [ "$MODE" = "lora" ]; then
+  echo "=== LORA MODE: downloading datasets ==="
+
+  DATASET_ROOT="/workspace/datasets"
+  mkdir -p "$DATASET_ROOT"
+
+  # Copy zips; don't re-download if already present
+  rclone copy gdrive:runpod/dataset "$DATASET_ROOT" \
+    --include "*.zip" \
+    --ignore-existing \
+    --progress
+
+  echo "Extracting datasets..."
+  cd "$DATASET_ROOT"
+
+  shopt -s nullglob
+  for f in *.zip; do
+    name=$(basename "$f" .zip)
+    mkdir -p "$name"
+    unzip -o "$f" -d "$name"
+  done
+  shopt -u nullglob
+
+  echo
+  echo "Datasets ready:"
+  ls -lh "$DATASET_ROOT"
+
+  echo
+echo "Starting LoRA output auto-sync..."
+
+nohup bash -lc '
+while true; do
+  for d in /workspace/output /workspace/outputs /workspace/out /workspace/results /workspace/runs /workspace/training_outputs /workspace/lora /workspace/loras /workspace/models /workspace/checkpoints; do
+    if [ -d "$d" ]; then
+      rclone copy "$d" "gdrive:runpod/lora/output" \
+        --include "*.safetensors" \
+        --include "*.pt" \
+        --include "*.json" \
+        --include "*.yaml" \
+        --include "*.yml" \
+        --exclude "*" \
+        --ignore-existing \
+        --min-age 30s \
+        --transfers 4 \
+        --checkers 8
+    fi
+  done
+  sleep 60
+done
+' >> /workspace/rclone_lora_output.log 2>&1 &
+
+echo "✔ LoRA output auto-sync running"
+echo "=== LORA BOOTSTRAP COMPLETE ==="
+exit 0
+
+  echo "✔ LoRA output auto-sync running to: $LORA_DRIVE_TARGET"
+  echo "=== LORA BOOTSTRAP COMPLETE ==="
+  exit 0
+fi
+
+# -------------------------
+# COMFYUI SETUP (IMAGE / VIDEO MODES ONLY)
+# -------------------------
 echo "Detecting ComfyUI location..."
 
 if [ -d "/workspace/runpod-slim/ComfyUI/models" ]; then
     COMFY_ROOT="/workspace/runpod-slim/ComfyUI"
-
 elif [ -d "/workspace/ComfyUI/models" ]; then
     COMFY_ROOT="/workspace/ComfyUI"
-
 elif [ -d "/ComfyUI/models" ]; then
     COMFY_ROOT="/ComfyUI"
-
 else
     echo "❌ Could not find ComfyUI models folder"
     exit 1
@@ -28,8 +135,18 @@ fi
 
 echo "Using ComfyUI at: $COMFY_ROOT"
 echo
-echo "=== Installing core custom nodes ==="
 
+BASE_PATH="$COMFY_ROOT/models"
+mkdir -p "$BASE_PATH/diffusion_models" \
+         "$BASE_PATH/vae" \
+         "$BASE_PATH/text_encoders" \
+         "$BASE_PATH/loras" \
+         "$BASE_PATH/wildcards"
+
+echo "Models path: $BASE_PATH"
+echo
+
+echo "=== Installing core custom nodes ==="
 CUSTOM_NODE_PATH="$COMFY_ROOT/custom_nodes"
 mkdir -p "$CUSTOM_NODE_PATH"
 cd "$CUSTOM_NODE_PATH"
@@ -41,7 +158,7 @@ install_node () {
     if [ -d "$NAME" ]; then
         echo "✔ $NAME already exists, pulling latest"
         cd "$NAME"
-	git pull --ff-only || true
+        git pull --ff-only || true
         cd ..
     else
         echo "Cloning $NAME"
@@ -55,14 +172,6 @@ install_node https://github.com/GadzoinksOfficial/comfyui_gprompts.git
 
 echo "✔ Custom nodes installed"
 echo
-echo
-
-# -------------------------
-# BASIC PACKAGES
-# -------------------------
-
-apt-get update -qq
-apt-get install -y -qq unzip wget curl rclone git
 
 # -------------------------
 # INSTALL CUSTOM NODE REQUIREMENTS
@@ -92,48 +201,6 @@ mkdir -p "$BASE_PATH/wildcards"
 
 echo "Using ComfyUI at: $COMFY_ROOT"
 echo "Models path: $BASE_PATH"
-
-# -------------------------
-# RCLONE CONFIG
-# -------------------------
-
-echo "Configuring rclone..."
-
-if [ -n "${rclone_gdrive_token:-}" ]; then
-    TOKEN="$rclone_gdrive_token"
-    echo "Using rclone_gdrive_token"
-elif [ -n "${gdrive_runpod_root:-}" ]; then
-    TOKEN="$gdrive_runpod_root"
-    echo "Using gdrive_runpod_root"
-else
-    echo "❌ No Google Drive token provided"
-    exit 1
-fi
-
-if [[ "$TOKEN" == "REAL_TOKEN" || -z "$TOKEN" ]]; then
-    echo "❌ Invalid Google Drive token"
-    exit 1
-fi
-
-mkdir -p ~/.config/rclone
-rm -f ~/.config/rclone/rclone.conf
-
-cat > ~/.config/rclone/rclone.conf <<EOF
-[gdrive]
-type = drive
-scope = drive
-token = $TOKEN
-EOF
-
-echo "Generated rclone config:"
-cat ~/.config/rclone/rclone.conf
-
-if ! rclone about gdrive: > /dev/null 2>&1; then
-    echo "❌ Failed to connect to Google Drive"
-    exit 1
-fi
-
-echo "✔ rclone configured"
 
   # -------------------------
   # QWEN BASE MODEL
