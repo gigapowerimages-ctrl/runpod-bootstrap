@@ -353,12 +353,19 @@ fi
 
 if [ -n "${DRIVE_TARGET:-}" ]; then
     mkdir -p "$OUTPUT_DIR"
+
     (
     while true; do
-        rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" --ignore-existing --transfers 4 --checkers 8
+        rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" \
+        --ignore-existing \
+	--min-age 10s
+        --transfers 4 \
+        --checkers 8 \
+        >> /workspace/rclone.log 2>&1
         sleep 30
     done
     ) &
+
     echo "Drive auto-sync running."
 fi
 
