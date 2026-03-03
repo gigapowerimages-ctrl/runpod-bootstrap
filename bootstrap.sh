@@ -280,6 +280,18 @@ fi
     [2233198]="qwen_SNOFS"
     [2195978]="qwen_MYSTIC"
     [2316696]="qwen_4PLAY"
+    [2677908]="qwen_ig"
+    [2735099]="qwen_yarn"
+    [2637922]="qwen_innie"
+    [2450317]="qwen_fantasy"
+    [2453097]="qwen_famegrid"
+    [2179410]="qwen_comic"
+    [2453097]="qwen_manga"
+    [2450317]="qwen_pinup"
+    [2540186]="qwen_ghibli"
+    [2218514]="qwen_anime"
+    [2143914]="qwen_flat"
+
   )
 
   for id in "${!IMAGE_LORAS[@]}"; do
@@ -421,17 +433,16 @@ fi
 if [ -n "${DRIVE_TARGET:-}" ]; then
     mkdir -p "$OUTPUT_DIR"
 
-    (
-    while true; do
-        rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" \
+(
+while true; do
+    rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" \
         --ignore-existing \
-	--min-age 10s
+        --min-age 10s \
         --transfers 4 \
-        --checkers 8 \
-        >> /workspace/rclone.log 2>&1
-        sleep 30
-    done
-    ) &
+        --checkers 8
+    sleep 30
+done
+) >> /workspace/rclone.log 2>&1 &
 
     echo "Drive auto-sync running."
 fi
