@@ -419,32 +419,49 @@ if [ "$MODE" = "video" ]; then
 fi
 
 # -------------------------
-# AUTO SYNC OUTPUTS TO DRIVE
+# AUTO SYNC OUTPUTS TO DRIVE (ALL MODES)
 # -------------------------
 
-OUTPUT_DIR="$COMFY_ROOT/output"
+echo "Starting universal output auto-sync..."
 
 if [ "$MODE" = "image" ]; then
     DRIVE_TARGET="gdrive:runpod/image/output"
 elif [ "$MODE" = "video" ]; then
     DRIVE_TARGET="gdrive:runpod/video/output"
+elif [ "$MODE" = "lora" ]; then
+    DRIVE_TARGET="gdrive:runpod/lora/output"
 fi
 
-if [ -n "${DRIVE_TARGET:-}" ]; then
-    mkdir -p "$OUTPUT_DIR"
-
-(
+nohup bash -lc '
 while true; do
-    rclone copy "$OUTPUT_DIR" "$DRIVE_TARGET" \
+
+  for d in \
+    '"$COMFY_ROOT"'/output \
+    /workspace/output \
+    /workspace/outputs \
+    /workspace/out \
+    /workspace/results \
+    /workspace/runs \
+    /workspace/training_outputs \
+    /workspace/lora \
+    /workspace/loras \
+    /workspace/models \
+    /workspace/checkpoints
+  do
+    if [ -d "$d" ]; then
+      rclone copy "$d" "'"$DRIVE_TARGET"'" \
         --ignore-existing \
-        --min-age 10s \
+        --min-age 30s \
         --transfers 4 \
         --checkers 8
-    sleep 30
-done
-) >> /workspace/rclone.log 2>&1 &
+    fi
+  done
 
-    echo "Drive auto-sync running."
-fi
+  sleep 60
+
+done
+' >> /workspace/rclone_output.log 2>&1 &
+
+echo "✔ Output auto-sync running to $DRIVE_TARGET"
 
 echo "=== BOOTSTRAP COMPLETE ==="
