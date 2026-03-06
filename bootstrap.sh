@@ -416,10 +416,8 @@ fi
 
 if [ "$MODE" = "video" ]; then
     rclone copy gdrive:runpod/video/video.json "$WORKFLOW_DIR/"
-fi
-
-if [ "$MODE" = "video" ]; then
     rclone copy gdrive:runpod/video/video_api.json "$WORKFLOW_DIR/"
+    rclone copy gdrive:runpod/video/batch_i2v.py "$COMFY_ROOT/"
 fi
 
 # -------------------------
