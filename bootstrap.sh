@@ -415,6 +415,10 @@ if [ "$MODE" = "image" ]; then
 fi
 
 if [ "$MODE" = "video" ]; then
+    rclone copy gdrive:runpod/video/video.json "$WORKFLOW_DIR/"
+fi
+
+if [ "$MODE" = "video" ]; then
     rclone copy gdrive:runpod/video/video_api.json "$WORKFLOW_DIR/"
 fi
 
