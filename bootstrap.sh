@@ -281,7 +281,7 @@ fi
     [2195978]="qwen_MYSTIC"
     [2316696]="qwen_4PLAY"
     [2677908]="qwen_ig"
-    [2735099]="qwen_yarn"
+    [2335968]="qwen_1girl"
     [2637922]="qwen_innie"
     [2450317]="qwen_fantasy"
     [2453097]="qwen_famegrid"
